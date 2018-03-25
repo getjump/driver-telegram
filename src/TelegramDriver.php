@@ -209,7 +209,7 @@ class TelegramDriver extends HttpDriver
 
             $messages = [
                 new IncomingMessage($callback->get('data'), $callback->get('from')['id'],
-                    $callback->get('message')['chat']['id'], $callback->get('message')),
+                    $callback->get('message')['chat']['id'], $callback),
             ];
         } elseif ($this->isValidLoginRequest()) {
             $messages = [
