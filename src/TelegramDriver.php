@@ -2,23 +2,23 @@
 
 namespace BotMan\Drivers\Telegram;
 
-use Illuminate\Support\Collection;
-use BotMan\BotMan\Drivers\HttpDriver;
-use BotMan\BotMan\Messages\Incoming\Answer;
-use BotMan\BotMan\Messages\Attachments\File;
-use BotMan\Drivers\Telegram\Extensions\User;
-use BotMan\BotMan\Messages\Attachments\Audio;
-use BotMan\BotMan\Messages\Attachments\Image;
-use BotMan\BotMan\Messages\Attachments\Video;
-use BotMan\BotMan\Messages\Outgoing\Question;
-use Symfony\Component\HttpFoundation\Request;
 use BotMan\BotMan\Drivers\Events\GenericEvent;
-use Symfony\Component\HttpFoundation\Response;
+use BotMan\BotMan\Drivers\HttpDriver;
+use BotMan\BotMan\Messages\Attachments\Audio;
+use BotMan\BotMan\Messages\Attachments\File;
+use BotMan\BotMan\Messages\Attachments\Image;
 use BotMan\BotMan\Messages\Attachments\Location;
-use Symfony\Component\HttpFoundation\ParameterBag;
+use BotMan\BotMan\Messages\Attachments\Video;
+use BotMan\BotMan\Messages\Incoming\Answer;
 use BotMan\BotMan\Messages\Incoming\IncomingMessage;
 use BotMan\BotMan\Messages\Outgoing\OutgoingMessage;
+use BotMan\BotMan\Messages\Outgoing\Question;
 use BotMan\Drivers\Telegram\Exceptions\TelegramException;
+use BotMan\Drivers\Telegram\Extensions\User;
+use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class TelegramDriver extends HttpDriver
 {
@@ -62,7 +62,7 @@ class TelegramDriver extends HttpDriver
         $responseData = json_decode($response->getContent(), true);
 
         if ($response->getStatusCode() !== 200) {
-            throw new TelegramException('Error retrieving user info: '.$responseData['description']);
+            throw new TelegramException('Error retrieving user info: ' . $responseData['description']);
         }
 
         $userData = Collection::make($responseData['result']['user']);
@@ -82,7 +82,7 @@ class TelegramDriver extends HttpDriver
             return in_array($key, ['audio', 'voice', 'video', 'photo', 'location', 'document']);
         })->isEmpty();
 
-        return $noAttachments && (! is_null($this->event->get('from')) || ! is_null($this->payload->get('callback_query'))) && ! is_null($this->payload->get('update_id'));
+        return $noAttachments && (!is_null($this->event->get('from')) || !is_null($this->payload->get('callback_query'))) && !is_null($this->payload->get('update_id'));
     }
 
     /**
@@ -134,7 +134,7 @@ class TelegramDriver extends HttpDriver
         $check = $this->queryParameters
             ->except('hash')
             ->map(function ($value, $key) {
-                return $key.'='.$value;
+                return $key . '=' . $value;
             })
             ->values()
             ->sort();
@@ -367,7 +367,7 @@ class TelegramDriver extends HttpDriver
      */
     public function isConfigured()
     {
-        return ! empty($this->config->get('token'));
+        return !empty($this->config->get('token'));
     }
 
     /**
@@ -380,9 +380,9 @@ class TelegramDriver extends HttpDriver
      */
     public function sendRequest($endpoint, array $parameters, IncomingMessage $matchingMessage)
     {
-        $parameters = array_replace_recursive([
-            'chat_id' => $matchingMessage->getRecipient(),
-        ], $parameters);
+        if (!isset($parameters['chat_id'])) {
+            $parameters['chat_id'] = $matchingMessage->getRecipient();
+        }
 
         return $this->http->post($this->buildApiUrl($endpoint), [], $parameters);
     }
@@ -395,7 +395,7 @@ class TelegramDriver extends HttpDriver
      */
     protected function buildApiUrl($endpoint)
     {
-        return self::API_URL.$this->config->get('token').'/'.$endpoint;
+        return self::API_URL . $this->config->get('token') . '/' . $endpoint;
     }
 
     /**
@@ -406,6 +406,6 @@ class TelegramDriver extends HttpDriver
      */
     protected function buildFileApiUrl($endpoint)
     {
-        return self::FILE_API_URL.$this->config->get('token').'/'.$endpoint;
+        return self::FILE_API_URL . $this->config->get('token') . '/' . $endpoint;
     }
 }
